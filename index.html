@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>购物清单</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./src/ui/main.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <p class="eyebrow">我的本地清单</p>
+      <h1>购物清单</h1>
+      <nav id="navigation" aria-label="主导航"></nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <p id="status" role="status" aria-live="polite">正在打开本地数据库…</p>
+    <p id="error" role="alert" hidden></p>
+    <div id="content"></div>
+  </main>
+</body>
+</html>
