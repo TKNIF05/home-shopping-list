@@ -37,7 +37,7 @@ button, input:not([type=checkbox]), select, textarea {
 button { background: #fff; color: var(--green); cursor: pointer; font-weight: 650; }
 button.primary { background: #dcebc6; color: #304e32; border-color: #afc98d; }
 .trip-controls { display: flex; align-items: flex-end; flex-wrap: wrap; gap: .7rem; }
-.trip-controls > label { flex: 0 1 16rem; }
+.trip-controls > label { flex: 1 1 8rem; max-width: 16rem; }
 .trip-controls > label select { min-height: 46px; }
 .trip-controls > button { min-height: 46px; }
 button.danger { color: #962c28; }
