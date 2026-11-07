@@ -138,7 +138,7 @@ export function shopping(ctx) {
   return [
     panel('购物行程',
       active.length > 1 && field('切换活动行程', activeChoice),
-      stores.length > 0 && h('div', { class: 'row' }, field('选择商店', storeChoice),
+      stores.length > 0 && h('div', { class: 'trip-controls' }, field('选择商店', storeChoice),
         button('打开行程', () => run(async () => {
           const entry = await service.openTrip(storeChoice.value);
           ctx.selectTrip(entry.id);
