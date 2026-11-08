@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { setTimeout as pause } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { serve } from '../scripts/serve.mjs';
@@ -16,8 +16,14 @@ const binary = process.env.CHROME_PATH ?? [
 if (!binary) throw new Error('请设置 CHROME_PATH 指向 Chrome 或 Chromium。');
 
 const profile = await mkdtemp(join(tmpdir(), 'shopping-test-chrome-'));
-const root = fileURLToPath(new URL('../dist', import.meta.url));
-const { server, url } = await serve({ port: 0, root, testFiles: true });
+const upgradeMode = process.argv.includes('--upgrade');
+const recipeMode = process.argv.includes('--recipe') || upgradeMode;
+let upgraded = !upgradeMode;
+const root = recipeMode ? fileURLToPath(new URL('../../交接包/Codex完整交接包', import.meta.url)) :
+  fileURLToPath(new URL('../dist', import.meta.url));
+const testDirectory = recipeMode ? resolve(root, 'tests') : fileURLToPath(new URL('./', import.meta.url));
+const { server, url } = await serve({ port: 0, root, testFiles: true, testDirectory,
+  siteRoot: recipeMode ? () => resolve(root, upgraded ? 'app' : 'work/baseline-v10') : undefined });
 const chrome = spawn(binary, [
   '--headless=new', '--remote-debugging-pipe', '--no-first-run', '--no-default-browser-check',
   '--disable-background-networking', '--user-data-dir=' + profile, 'about:blank',
@@ -68,21 +74,33 @@ function cdp(method, params, sessionId) {
 }
 
 async function run(label, viewport) {
+  upgraded = !upgradeMode;
   const { browserContextId } = await cdp('Target.createBrowserContext');
   try {
     const { targetId } = await cdp('Target.createTarget', { url: 'about:blank', browserContextId });
     const { sessionId } = await cdp('Target.attachToTarget', { targetId, flatten: true });
     await cdp('Emulation.setDeviceMetricsOverride', viewport, sessionId);
     if (viewport.mobile) await cdp('Emulation.setTouchEmulationEnabled', { enabled: true }, sessionId);
-    const navigation = await cdp('Page.navigate', { url: url + 'tests/browser.html' }, sessionId);
+    const navigation = await cdp('Page.navigate', { url: url + 'tests/' +
+      (upgradeMode ? 'shopping-upgrade.html' : recipeMode ? 'shopping-browser.html' : 'browser.html') }, sessionId);
     if (navigation.errorText) throw new Error(navigation.errorText);
-    const until = Date.now() + 40000;
+    const until = Date.now() + (recipeMode ? 120000 : 40000);
     while (Date.now() < until) {
       const evaluated = await cdp('Runtime.evaluate', {
         expression: 'JSON.stringify(document.querySelector("#result") && [document.querySelector("#result").dataset.state, document.querySelector("#result").textContent])',
         returnByValue: true,
       }, sessionId);
       const outcome = JSON.parse(evaluated.result.value ?? 'null');
+      if (outcome?.[0] === 'upgrade') {
+        upgraded = true;
+        await cdp('Runtime.evaluate', {expression: "window.postMessage('shopping-test-upgrade', location.origin)"}, sessionId);
+      }
+      if (outcome?.[0] === 'offline') {
+        await cdp('Network.enable', {}, sessionId);
+        await cdp('Network.emulateNetworkConditions',
+          {offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0}, sessionId);
+        await cdp('Runtime.evaluate', {expression: "window.postMessage('shopping-test-offline', location.origin)"}, sessionId);
+      }
       if (outcome?.[0] === 'fail') throw new Error(label + '\n' + outcome[1]);
       if (outcome?.[0] === 'pass') {
         console.log(label + '\n' + outcome[1]);

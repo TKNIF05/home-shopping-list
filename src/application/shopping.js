@@ -2,7 +2,7 @@ import { assert, canMerge, isLiveNeed, matchStore, mergeQuantity, revise, transi
 import { parseImport, previewImport, readItem, verifyStores } from '../import-export/contract.js';
 import { exportBackup, exportOutstanding, parseBackup } from '../import-export/backup.js';
 import { array, cleaned } from '../import-export/validation.js';
-import { DATA_TABLES, newRecord, transact } from '../storage/indexed-db.js';
+import { DATA_TABLES, newRecord, readMeta, transact } from '../storage/indexed-db.js';
 
 function find(rows, id, message) {
   const row = rows.find(item => item.id === id);
@@ -34,10 +34,11 @@ export function shoppingService(db) {
     return transact(db, (data, write) => fn(data, write, new Date().toISOString()));
   }
 
-  function saveStore(input, id, revision) {
+  function saveStore(input, id, revision, token) {
     const name = cleaned(input.name, '商店名称', 160, 1);
     const aliases = [...new Set(array(input.aliases, '商店别名', 50).map(alias => cleaned(alias, '商店别名', 160, 1)))];
     return change((data, write, now) => {
+      if (token !== undefined) checkToken(data, token);
       const store = id ? find(data.stores, id, '找不到该商店。') : null;
       assert(!store || store.revision === revision, '商店已更新，请重新打开编辑。');
       const next = store ? revise(store, { name, aliases }, now) :
@@ -50,8 +51,9 @@ export function shoppingService(db) {
   return {
     snapshot: () => transact(db),
     saveStore,
-    archiveStore(id, archived, revision) {
+    archiveStore(id, archived, revision, token) {
       return change((data, write, now) => {
+        if (token !== undefined) checkToken(data, token);
         const store = find(data.stores, id, '找不到该商店。');
         assert(store.revision === revision, '商店已更新，请重试。');
         if (archived) {
@@ -65,9 +67,10 @@ export function shoppingService(db) {
         write.put('stores', revise(store, { archivedAt: archived ? now : null }, now));
       });
     },
-    saveNeed(input, id, revision) {
+    saveNeed(input, id, revision, token) {
       const fields = readItem(input);
       return change((data, write, now) => {
+        if (token !== undefined) checkToken(data, token);
         if (!id) {
           verifyStores(fields.storePolicy, data.stores);
           return addNeed(write, { ...fields, source: { type: 'manual' } }, now);
@@ -105,8 +108,9 @@ export function shoppingService(db) {
         for (const id of ids) write.put('needs', transition(findNeed(data, id), 'plan', now, trip));
       });
     },
-    updateNeed(id, action, revision, tripId) {
+    updateNeed(id, action, revision, tripId, token) {
       return change((data, write, now) => {
+        if (token !== undefined) checkToken(data, token);
         const need = findNeed(data, id);
         assert(need.revision === revision, '商品已更新，请重试。');
         assert(['check', 'uncheck', 'return', 'cancel'].includes(action), '未知购物操作。');
@@ -171,10 +175,16 @@ export function shoppingService(db) {
     async previewRestore(text) {
       return { backup: parseBackup(text), token: (await transact(db)).meta.token };
     },
+    async restoreSnapshot() {
+      const saved = await readMeta(db, 'before-restore');
+      assert(saved, '当前还没有恢复前的购物备份。');
+      return saved.backup;
+    },
     async restore(text, token) {
       const backup = parseBackup(text);
       return change((data, write) => {
         checkToken(data, token);
+        write.put('appMeta', { id: 'before-restore', backup: exportBackup(data) });
         for (const table of DATA_TABLES) {
           write.clear(table);
           for (const row of backup[table]) write.put(table, row);

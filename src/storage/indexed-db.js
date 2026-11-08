@@ -8,6 +8,14 @@ export function newRecord(id = crypto.randomUUID(), now = new Date().toISOString
   return { id, createdAt: now, updatedAt: now, revision: 1 };
 }
 
+export function readMeta(db, id) {
+  return new Promise((resolve, reject) => {
+    const request = db.transaction('appMeta').objectStore('appMeta').get(id);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
 export function openDatabase(name = DATABASE_NAME) {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(name, 1);

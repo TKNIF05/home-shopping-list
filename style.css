@@ -15,6 +15,7 @@ body { margin: 0; }
 .produce span:nth-child(2) { transform: translateY(-.35rem); }
 .produce span:nth-child(3) { transform: rotate(15deg); }
 .eyebrow { margin: 0; color: #627253; font-size: .87rem; }
+.recipe-home { display: inline-block; color: #396447; margin-bottom: .65rem; padding-block: .3rem; }
 h1 {
   margin: .2rem 0 .8rem;
   font-family: ui-rounded, "YouYuan", "幼圆", "Arial Rounded MT Bold", system-ui, sans-serif;

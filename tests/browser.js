@@ -78,6 +78,22 @@ async function storageCases() {
     damaged.needs[0].tripId = crypto.randomUUID();
     await rejects(() => service.restore(JSON.stringify(damaged), review.token), /行程/);
     assert((await service.snapshot()).needs.length === 4, '无效恢复更改了现有数据');
+    const oldView = await service.snapshot();
+    await service.restore(content, oldView.meta.token);
+    assert((await service.restoreSnapshot()).needs.length === 4, '恢复前快照缺少当前商品');
+    await rejects(() => service.updateNeed(grapes.id, 'cancel',
+      oldView.needs.find(need => need.id === grapes.id).revision, undefined, oldView.meta.token), /重新预览/);
+    const recipeText = contract({...item('菜单土豆'), source: {
+      type: 'recipe', ref: 'recipe:ingredient', externalRef: 'meal:line',
+    }});
+    const recipeReview = await service.previewImport(recipeText);
+    await service.importItems(recipeText, recipeReview.token, ['add']);
+    const recipeNeed = (await service.snapshot()).needs.find(need => need.name === '菜单土豆');
+    await service.updateNeed(recipeNeed.id, 'cancel', recipeNeed.revision);
+    const renamedRecipe = recipeText.replace('菜单土豆', '改名土豆');
+    const renamedReview = await service.previewImport(renamedRecipe);
+    assert(renamedReview.rows[0].matches.some(need => need.id === recipeNeed.id),
+      '已取消的菜单来源在改名后被当作全新商品');
     const restoredName = dbName + '-restore';
     const restoredDb = await openDatabase(restoredName);
     try {

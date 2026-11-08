@@ -1,5 +1,9 @@
 # 第一阶段浏览器验收
 
+2026-11-06 用户确认 Android One UI 9／Chrome 和 iPhone iOS 26／Safari 均通过本次真机验收。此前用户已确认本地 Windows Chrome 全部测试通过，第一阶段验收完成。
+
+本次手机反馈按整体结果记录，对应聊天中分设备列出的添加、JSON 导入与重复拦截、商店匹配、刷新与后台切换、结束行程、备份恢复测试流程。
+
 在 Windows 桌面 Chrome 或 Edge 运行 `npm run test:browser`。浏览器脚本使用独立配置和随机回环端口，不使用日常购物数据。
 
 在 Android Chrome 和 iPhone Safari 使用一次性 HTTPS 测试地址，记录设备、系统版本、浏览器版本及结果。若测试地址包含本项目源码，可在仓库子路径打开 `tests/browser.html` 跑同一套浏览器断言。正式构建不包含测试文件。以下人工步骤同时覆盖真实系统文件选择、下载和后台切换。

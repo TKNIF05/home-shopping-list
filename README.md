@@ -14,6 +14,8 @@ npm run dev
 [Import Contract v1 JSON Schema](docs/shopping-import.schema.json)  
 [跨浏览器验收](tests/acceptance.md)
 
+[修改定位与菜谱接入](docs/maintenance.md)
+
 ## 示例购物 JSON
 
 ```json

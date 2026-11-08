@@ -1,0 +1,309 @@
+{
+  "format": "shopping-ui-review-rules",
+  "version": 1,
+  "recordedOn": "2026-11-06",
+  "timezone": "America/Chicago",
+  "scope": "购物清单项目后续界面修改的默认截图与审阅流程，用户的新要求优先。",
+  "workflow": [
+    "完成本地修改",
+    "用虚构商品实际操作，验证受影响功能",
+    "检查并选取6至9张有代表性的截图",
+    "在回复中嵌入截图，逐张说明展示内容",
+    "等待用户确认满意及发布后再发布"
+  ],
+  "screenshots": {
+    "count": {
+      "min": 6,
+      "max": 9
+    },
+    "selection": "覆盖所有功能区域和关键状态，按本次改动挑选，必要时一张展示多个相关功能。",
+    "data": "使用丰富的虚构商品，包含肉、青菜、水果、饮品等，以及数量、单位、未知数量、备注、可选购买、任意商店、优先商店和指定商店。",
+    "capture": "真实本地应用界面，保留实际操作结果。主页面展示页头和导航，表单与功能区可以截取完整区域。检查截图后再交付，避免关键控件被裁掉或列表只有空白状态。",
+    "viewport": {
+      "focus": "手机竖屏",
+      "referenceWidthCssPixels": 427,
+      "referenceHeightCssPixels": 932,
+      "note": "这是本次预览的参考尺寸，后续可按目标设备调整。模拟尺寸与真机结果分别记录。"
+    },
+    "output": {
+      "directory": "review-screenshots/",
+      "format": "使用截图工具的原始格式和对应扩展名，本次为JPEG。",
+      "presentation": "在回复中嵌入6至9张实际截图，使用编号和简短说明，展示UI结构与外观。"
+    }
+  },
+  "views": [
+    {
+      "id": "backlog",
+      "name": "待购池",
+      "show": [
+        "多种商品",
+        "数量与备注",
+        "商店规则",
+        "筛选与编辑按钮"
+      ]
+    },
+    {
+      "id": "product-editor",
+      "name": "商品编辑",
+      "show": [
+        "名称",
+        "数量和单位",
+        "备注",
+        "可选购买",
+        "商店规则与商店选择",
+        "保存与取消"
+      ]
+    },
+    {
+      "id": "trip-candidates",
+      "name": "行程候选",
+      "show": [
+        "候选商品",
+        "选择复选框",
+        "跨店选入提示",
+        "加入行程按钮"
+      ]
+    },
+    {
+      "id": "active-trip",
+      "name": "购物中",
+      "show": [
+        "商店选择",
+        "打开行程按钮对齐",
+        "未购商品",
+        "编辑与留待下次",
+        "结束行程"
+      ]
+    },
+    {
+      "id": "purchased",
+      "name": "已购买",
+      "show": [
+        "实际勾选状态",
+        "已购与未购统计",
+        "筛选"
+      ]
+    },
+    {
+      "id": "history",
+      "name": "购物历史",
+      "show": [
+        "已结束行程",
+        "商店",
+        "已购商品和备注"
+      ]
+    },
+    {
+      "id": "stores",
+      "name": "商店管理",
+      "show": [
+        "商店列表",
+        "新增和停用入口",
+        "名称与别名编辑"
+      ]
+    },
+    {
+      "id": "import",
+      "name": "导入预览",
+      "show": [
+        "商品预览",
+        "疑似重复提示",
+        "合并、保留两条或跳过的可用选项",
+        "确认导入"
+      ]
+    },
+    {
+      "id": "backup",
+      "name": "导出与恢复",
+      "show": [
+        "完整备份和待购导出",
+        "文件选择",
+        "恢复预览",
+        "覆盖确认"
+      ]
+    }
+  ],
+  "verification": {
+    "operations": [
+      "编辑保存",
+      "确认加入行程",
+      "勾选与撤销",
+      "刷新后状态保留",
+      "结束行程后未购回退及历史归档",
+      "JSON校验与重复提示",
+      "备份下载和恢复预览"
+    ],
+    "reporting": "说明本轮实际验证内容与限制。恢复覆盖等操作使用隔离的测试数据。按改动范围运行现有回归。"
+  },
+  "sampleImport": {
+    "format": "shopping-import",
+    "version": 1,
+    "items": [
+      {
+        "name": "牛排",
+        "quantity": {
+          "value": 2,
+          "unit": "块"
+        },
+        "note": "周末煎牛排",
+        "optional": false,
+        "storePolicy": {
+          "mode": "preferred",
+          "storeIds": [
+            "heb"
+          ]
+        }
+      },
+      {
+        "name": "小白菜",
+        "quantity": {
+          "value": 2,
+          "unit": "把"
+        },
+        "note": "叶片新鲜、嫩一些",
+        "optional": false,
+        "storePolicy": {
+          "mode": "required",
+          "storeIds": [
+            "99ranch"
+          ]
+        }
+      },
+      {
+        "name": "菠萝",
+        "quantity": {
+          "value": 1,
+          "unit": "个"
+        },
+        "note": "挑成熟一点的",
+        "optional": false,
+        "storePolicy": {
+          "mode": "any",
+          "storeIds": []
+        }
+      },
+      {
+        "name": "鸡蛋",
+        "quantity": {
+          "value": 12,
+          "unit": "个"
+        },
+        "note": "",
+        "optional": false,
+        "storePolicy": {
+          "mode": "any",
+          "storeIds": []
+        }
+      },
+      {
+        "name": "牛奶",
+        "quantity": {
+          "value": 1,
+          "unit": "瓶"
+        },
+        "note": "全脂",
+        "optional": false,
+        "storePolicy": {
+          "mode": "preferred",
+          "storeIds": [
+            "wholefoods"
+          ]
+        }
+      },
+      {
+        "name": "土豆",
+        "quantity": {
+          "value": 4,
+          "unit": "个"
+        },
+        "note": "",
+        "optional": false,
+        "storePolicy": {
+          "mode": "any",
+          "storeIds": []
+        }
+      },
+      {
+        "name": "新鲜番茄",
+        "quantity": {
+          "value": 3,
+          "unit": "个"
+        },
+        "note": "做番茄炒蛋",
+        "optional": false,
+        "storePolicy": {
+          "mode": "any",
+          "storeIds": []
+        }
+      },
+      {
+        "name": "三文鱼",
+        "quantity": {
+          "value": 500,
+          "unit": "克"
+        },
+        "note": "分装两份",
+        "optional": false,
+        "storePolicy": {
+          "mode": "preferred",
+          "storeIds": [
+            "heb"
+          ]
+        }
+      },
+      {
+        "name": "醋",
+        "quantity": null,
+        "note": "下次去大华买",
+        "optional": false,
+        "storePolicy": {
+          "mode": "required",
+          "storeIds": [
+            "99ranch"
+          ]
+        }
+      },
+      {
+        "name": "葡萄",
+        "quantity": null,
+        "note": "看价格决定",
+        "optional": true,
+        "storePolicy": {
+          "mode": "any",
+          "storeIds": []
+        }
+      },
+      {
+        "name": "番茄罐头",
+        "quantity": {
+          "value": 2,
+          "unit": "罐"
+        },
+        "note": "",
+        "optional": false,
+        "storePolicy": {
+          "mode": "any",
+          "storeIds": []
+        }
+      },
+      {
+        "name": "酸奶",
+        "quantity": {
+          "value": 1,
+          "unit": "盒"
+        },
+        "note": "原味无糖",
+        "optional": false,
+        "storePolicy": {
+          "mode": "any",
+          "storeIds": []
+        }
+      }
+    ]
+  },
+  "approval": {
+    "state": "2026-11-07 用户已授权审查修复、核对后发布；后续修改仍沿用截图审阅流程",
+    "referenceScreenshots": "review-screenshots/01-backlog.jpg 至 09-backup-restore.jpg"
+  }
+}
+

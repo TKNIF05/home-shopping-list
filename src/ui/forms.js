@@ -3,7 +3,7 @@ import { button, checkbox, field, form, h, option, submit } from './dom.js';
 export function needEditor(ctx, need) {
   const name = h('input', { required: true, maxlength: 160, value: need?.name });
   const value = h('input', { type: 'number', inputmode: 'decimal', step: 'any', min: 0, value: need?.quantity?.value });
-  const unit = h('input', { maxlength: 24, value: need?.quantity?.unit });
+  const unit = h('input', { maxlength: 40, value: need?.quantity?.unit });
   const note = h('textarea', { maxlength: 1000, rows: 2 }, need?.note ?? '');
   const optional = checkbox('视情况购买', need?.optional);
   const policy = h('select', {}, [
@@ -26,7 +26,7 @@ export function needEditor(ctx, need) {
         mode: policy.value,
         storeIds: policy.value === 'any' ? [] : stores.filter(store => store.input.checked).map(store => store.id),
       },
-    }, need?.id, need?.revision);
+    }, need?.id, need?.revision, ctx.data.meta.token);
     ctx.state.editNeed = null;
     ctx.state.addNeed = false;
   }, need ? '已保存商品。' : '已添加到待购池。'),
@@ -45,7 +45,7 @@ export function storeEditor(ctx, store) {
   const aliases = h('input', { value: store?.aliases.join('、') });
   return form(() => ctx.run(async () => {
     await ctx.service.saveStore({ name: name.value, aliases: aliases.value.split('、').map(s => s.trim()).filter(Boolean) },
-      store?.id, store?.revision);
+      store?.id, store?.revision, ctx.data.meta.token);
     ctx.state.editStore = null;
   }, '已保存商店。'), field('商店名称', name), field('商店别名（用顿号分隔）', aliases),
   h('div', { class: 'actions' }, submit('保存商店'), button('取消编辑', () => {

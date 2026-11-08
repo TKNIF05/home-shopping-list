@@ -3,6 +3,7 @@ import { shoppingService } from '../application/shopping.js';
 import { button } from './dom.js';
 import { backlog, shopping } from './shopping.js';
 import { exchange } from './exchange.js';
+import { readRecipeInbox } from '../adapters/recipe-inbox.js';
 
 const navigation = document.querySelector('#navigation');
 const content = document.querySelector('#content');
@@ -14,6 +15,7 @@ const state = {
   tab: 'shopping', tripId: null, tripFilter: '', backlogFilter: '', showOther: false,
   addNeed: false, editNeed: null, editStore: null, storeSettings: false, storeChoice: '',
   importText: '', importPreview: null, restorePreview: null, outstandingText: null,
+  recipeInbox: false,
 };
 
 try {
@@ -92,8 +94,31 @@ async function start() {
   try {
     service = shoppingService(await openDatabase());
     data = await service.snapshot();
+    const home = document.body.dataset.recipeHome;
+    if (home) {
+      const link = document.querySelector('#recipeHome');
+      link.href = home;
+      link.hidden = false;
+    }
     status.textContent = '';
     render();
+    try {
+      const text = readRecipeInbox();
+      if (text) {
+        state.tab = 'exchange';
+        state.importText = text;
+        state.recipeInbox = true;
+        const preview = await service.previewImport(text);
+        state.importPreview = preview;
+        state.repeat = false;
+        state.decisions = preview.rows.map(row => row.matches.length || row.duplicateInBatch ? '' : 'add');
+        render();
+        status.textContent = '已接收菜单材料，请预览并确认加入待购池。';
+      }
+    } catch (error) {
+      render();
+      report('菜单材料预览失败。' + error.message);
+    }
   } catch (error) {
     status.textContent = '';
     report('无法打开购物清单的本地存储。' + (error.message ?? ''));
@@ -101,3 +126,4 @@ async function start() {
 }
 
 start();
+

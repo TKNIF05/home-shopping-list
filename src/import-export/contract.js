@@ -12,7 +12,7 @@ export function readItem(value, path = '商品') {
   if (value.quantity !== null) {
     const qty = record(value.quantity, path + '.quantity', ['value', 'unit']);
     assert(Number.isFinite(qty.value) && qty.value > 0, path + '.quantity.value 必须是有限正数。');
-    quantity = { value: qty.value, unit: cleaned(qty.unit, path + '.quantity.unit', 24, 1) };
+    quantity = { value: qty.value, unit: cleaned(qty.unit, path + '.quantity.unit', 40, 1) };
   }
   const policy = record(value.storePolicy, path + '.storePolicy', ['mode', 'storeIds']);
   const mode = choice(policy.mode, ['any', 'preferred', 'required'], path + '.storePolicy.mode');
@@ -68,7 +68,12 @@ export function previewImport(parsed, data) {
   const rows = parsed.items.map((item, index) => {
     verifyStores(item.storePolicy, data.stores);
     const key = nameKey(item.name);
-    const matches = data.needs.filter(need => isLiveNeed(need) && nameKey(need.name) === key);
+    const matches = data.needs.filter(need => !need.deletedAt && (
+      isLiveNeed(need) && nameKey(need.name) === key ||
+      item.source.type === 'recipe' && item.source.externalRef &&
+      need.source.type === 'recipe' && need.source.ref === item.source.ref &&
+      need.source.externalRef === item.source.externalRef
+    ));
     const duplicateInBatch = seen.has(key);
     seen.add(key);
     const mergeTargets = alreadyImported ? [] : matches.filter(need => canMerge(need, item));

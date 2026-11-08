@@ -22,10 +22,10 @@ function needActions(ctx, need) {
   return h('div', { class: 'actions' },
     button('编辑 ' + need.name, () => { state.editNeed = need.id; ctx.render(); }),
     need.state === 'planned' && button('留待下次', () =>
-      run(() => service.updateNeed(need.id, 'return', need.revision, need.tripId), '已放回待购池。')),
+      run(() => service.updateNeed(need.id, 'return', need.revision, need.tripId, ctx.data.meta.token), '已放回待购池。')),
     button('取消购买 ' + need.name, () => {
       if (confirm('取消购买「' + need.name + '」？')) {
-        run(() => service.updateNeed(need.id, 'cancel', need.revision), '已取消购买。');
+        run(() => service.updateNeed(need.id, 'cancel', need.revision, undefined, ctx.data.meta.token), '已取消购买。');
       }
     }, 'danger'));
 }
@@ -47,7 +47,7 @@ function storeSettings(ctx) {
       h('div', { class: 'actions' },
         button('编辑 ' + store.name, () => { state.editStore = store.id; render(); }),
         button(store.archivedAt ? '启用' : '停用', () =>
-          run(() => service.archiveStore(store.id, !store.archivedAt, store.revision),
+          run(() => service.archiveStore(store.id, !store.archivedAt, store.revision, data.meta.token),
             store.archivedAt ? '已启用商店。' : '已停用商店。'))),
       state.editStore === store.id && storeEditor(ctx, store),
     ], '还没有商店。'));
@@ -106,7 +106,7 @@ function currentTrip(ctx, trip) {
       field('行程商品筛选', filter),
       list([...planned, ...purchased].filter(need => !state.tripFilter || state.tripFilter === need.state), need => [
         checkbox('已购 ' + itemTitle(need), need.state === 'purchased', checked =>
-          run(() => service.updateNeed(need.id, checked ? 'check' : 'uncheck', need.revision, trip.id),
+          run(() => service.updateNeed(need.id, checked ? 'check' : 'uncheck', need.revision, trip.id, data.meta.token),
             checked ? '已保存购买状态。' : '已撤销购买。', true)).label,
         itemDetails(need, data),
         need.state === 'planned' && [needActions(ctx, need), editNeed(ctx, need)],

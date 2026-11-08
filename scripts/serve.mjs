@@ -5,17 +5,23 @@ import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const project = dirname(dirname(fileURLToPath(import.meta.url)));
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',
+  '.json': 'application/json', '.pdf': 'application/pdf', '.svg': 'image/svg+xml',
+  '.png': 'image/png', '.wasm': 'application/wasm', '.webmanifest': 'application/manifest+json' };
 
-export async function serve({ port = 4173, root = project, base = '/shopping-list/', testFiles = false } = {}) {
+export async function serve({ port = 4173, root = project, base = '/shopping-list/', testFiles = false,
+  testDirectory = resolve(project, 'tests'), siteRoot } = {}) {
   const server = createServer(async (request, response) => {
     try {
       const url = new URL(request.url, 'http://localhost');
       if (!url.pathname.startsWith(base)) throw new Error();
-      const relative = decodeURIComponent(url.pathname.slice(base.length)) || 'index.html';
+      const pathname = decodeURIComponent(url.pathname.slice(base.length));
+      const relative = pathname.endsWith('/') || !pathname ? pathname + 'index.html' : pathname;
       const testPath = testFiles && relative.startsWith('tests/');
-      const directory = testPath ? resolve(project, 'tests') : root;
-      const path = resolve(directory, testPath ? relative.slice('tests/'.length) : relative);
+      const appPath = siteRoot && relative.startsWith('app/');
+      const directory = resolve(testPath ? testDirectory : appPath ? siteRoot() : root);
+      const file = testPath ? relative.slice('tests/'.length) : appPath ? relative.slice('app/'.length) : relative;
+      const path = resolve(directory, file);
       if (!path.startsWith(directory + sep) || !(await stat(path)).isFile()) throw new Error();
       response.writeHead(200, { 'Content-Type': (MIME[extname(path)] ?? 'text/plain') + '; charset=utf-8',
         'Cache-Control': 'no-store' });

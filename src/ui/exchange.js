@@ -1,4 +1,5 @@
 import { IMPORT_LIMIT } from '../import-export/contract.js';
+import { clearRecipeInbox } from '../adapters/recipe-inbox.js';
 import { button, checkbox, download, field, form, h, list, option, panel, submit } from './dom.js';
 import { itemDetails, itemTitle } from './shopping.js';
 
@@ -16,6 +17,8 @@ function importReview(ctx) {
     preview.alreadyImported && repeat.label,
     form(() => run(async () => {
       const counts = await service.importItems(state.importText, preview.token, state.decisions, state.repeat);
+      if (state.recipeInbox) clearRecipeInbox();
+      state.recipeInbox = false;
       state.importPreview = null;
       state.importText = '';
       return '导入完成。新增 ' + counts.addedCount + ' 项，合并 ' + counts.mergedCount +
@@ -34,7 +37,8 @@ function importReview(ctx) {
       return [
         h('strong', {}, itemTitle(row.item)), itemDetails(row.item, data),
         row.matches.length > 0 && h('p', { class: 'meta' }, '清单内疑似重复：' +
-          row.matches.map(need => itemTitle(need) + (need.state === 'planned' ? '（行程中）' : '')).join('、')),
+          row.matches.map(need => itemTitle(need) +
+            ({ planned: '（行程中）', purchased: '（已购买）', cancelled: '（已取消）' }[need.state] ?? '')).join('、')),
         row.duplicateInBatch && h('p', { class: 'meta' }, '本批次前面有同名商品。'),
         field('处理 ' + row.item.name, choices),
       ];
@@ -126,6 +130,9 @@ export function exchange(ctx) {
         button('下载完整备份', () => run(async () => {
           download('shopping-backup-' + dateTag() + '.json', await service.backup());
         }, '已生成完整备份。')),
+        button('下载上次恢复前的购物备份', () => run(async () => {
+          download('shopping-before-restore-' + dateTag() + '.json', await service.restoreSnapshot());
+        }, '已生成恢复前的购物备份。')),
         button('下载待购 JSON', () => run(async () => {
           download('shopping-outstanding-' + dateTag() + '.json', await service.outstanding());
         }, '已生成待购清单。')),
